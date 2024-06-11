@@ -11,3 +11,5 @@ https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.utility
 https://stackoverflow.com/questions/28776973/how-to-extract-one-specific-column-no-header-say-column-2-from-multiple-csv-f
 
 will also try exporting with different delimiters from source
+
+Getting `$curlCommand = "curl -H `"Authorization: Bearer $token`" -o $download_path$filename $link"` to work is too hard, because Authorization in reserved in PS. Had to use Invoke-WebRequest after all

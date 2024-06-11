@@ -22,7 +22,7 @@ foreach($row in $target_columns) {
     $target_list += $row
 }
 
-Write-Host $target_list
+# Write-Host $target_list
 
 # Download listed attachments and save them under ticket's number
 <# $download_path = "$PSScriptRoot\work\"
@@ -44,3 +44,22 @@ foreach ($ticket in $target_list) {
         Write-Host "failed"
     }
 } #>
+
+# CSV analysis
+# List downloaded files
+$files = Get-ChildItem -Path .\work | Select-Object -ExpandProperty Name
+# Write-Host $files
+
+$keyword = "testtest"
+
+# Join data from all csv together and assign filename to each row
+
+$full_data = @()
+foreach ($file in $files) {
+    $csv = Import-Csv -Path .\work\$file -Header (1)
+    foreach ($row in $csv) {
+        $full_data += [PSCustomObject]@{ Filename = $file; Row = $row."1" }
+    }
+}
+
+$full_data

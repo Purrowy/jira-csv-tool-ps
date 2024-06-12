@@ -17,7 +17,7 @@ Set-Content -Path $fixed_source_csv -Value $fixed_content
 # This works, but number of columns has to be hardcoded. Might be easier to select them later, if they are being indexed by number
 $imported_csv = Import-Csv $fixed_source_csv -Header (1..36) | Select-Object -Skip 1
 
-# Prepares a list of attachments to download
+# Prepares a list of attachments to download. Column names are hardcoded
 $target_list = @()
 $target_columns = $imported_csv | Select-Object -Property "2", "36"
 
@@ -51,7 +51,7 @@ foreach ($ticket in $target_list) {
 # CSV analysis
 # List downloaded files
 $files = Get-ChildItem -Path .\work | Select-Object -ExpandProperty Name
-# Write-Host $files
+$files
 
 <# # Join data from all csv together and assign filename to each row
 $full_data = @()
@@ -67,7 +67,7 @@ foreach ($file in $files) {
 # $keywords = $json.keywords
 # $keywords #>
 
-$files_with_keywords = @()
+<# $files_with_keywords = @()
 
 foreach ($file in $files) {
     $csv = Import-Csv -Path .\work\$file -Header (1)
@@ -87,4 +87,31 @@ foreach ($file in $files) {
     }
 }
 
-$files_with_keywords
+$files_with_keywords #>
+
+# Timestamp validation
+$minimum_date = (Get-Date).AddDays(-$json.days)
+Write-host ("Minimum date set to: " + $minimum_date.ToString($json.timestampFormat))
+$files_old = @()
+
+foreach ($file in $files) {
+    $csv = Import-Csv -Path .\work\$file -Header (1)
+    $found = $false
+    foreach ($row in $csv) {
+        if ($found) {break}
+
+        # Extracts date from downloaded csv and converts it to required format for comparision
+        $timestamp = $row."1".Substring(0, 15)        
+        $date = [datetime]::ParseExact($timestamp, $json.timestampFormat, $null)
+        
+        if ($date -lt $minimum_date) {
+            $files_old += $file
+            $found = $true
+            break
+        }
+    }
+}
+
+$files_old
+
+

@@ -2,6 +2,9 @@ Write-Host "Essa"
 $source_csv = "$PSScriptRoot\import.csv"
 $fixed_source_csv = "$PSScriptRoot\fixed.csv"
 
+# Import values from provided json file
+$json = Get-Content .\settings.json | ConvertFrom-Json
+
 # Issue: imported csv from Jira ignores chosen delimiter option and forces its default ; inside data rows
 # Solution: replace each forced delimiter with correct one before doing anything else with the file
 $imported_content = Get-Content $source_csv
@@ -50,16 +53,38 @@ foreach ($ticket in $target_list) {
 $files = Get-ChildItem -Path .\work | Select-Object -ExpandProperty Name
 # Write-Host $files
 
-$keyword = "testtest"
-
-# Join data from all csv together and assign filename to each row
-
+<# # Join data from all csv together and assign filename to each row
 $full_data = @()
 foreach ($file in $files) {
     $csv = Import-Csv -Path .\work\$file -Header (1)
     foreach ($row in $csv) {
-        $full_data += [PSCustomObject]@{ Filename = $file; Row = $row."1" }
+        $full_data += [PSCustomObject]@{ Filename = $file; Path = $row."1" }
     }
 }
 
-$full_data
+# $full_data
+
+# $keywords = $json.keywords
+# $keywords #>
+
+$files_with_keywords = @()
+
+foreach ($file in $files) {
+    $csv = Import-Csv -Path .\work\$file -Header (1)
+    $found = $false
+    foreach ($row in $csv) {
+        if ($found) {break}
+
+        foreach ($keyword in $json.keywords) {
+            if ($found) {break}
+            if ($row -like "*$keyword*") {                
+                write-host "$keyword found in $file"
+                $files_with_keywords += $file
+                $found = $true
+                break
+            }
+        }
+    }
+}
+
+$files_with_keywords

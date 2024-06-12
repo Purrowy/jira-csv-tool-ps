@@ -1,10 +1,6 @@
 {
     "token": "xxx",
-    "keywords": ["xyz", "masno", "eluwina"],
+    "keywords": ["test", "masno", "eluwina"],
     "days": 14,
-    "path": "work/",
-    "timestampFormat": "ddd dd MMM yyyy",
-    "issueColumn": "Issue key",
-    "attColumn": "Attachment",
-    "inputCellDelimiter": ";"
+    "timestampFormat": "ddd dd MMM yyyy"
 }

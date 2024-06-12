@@ -3,7 +3,7 @@
     "keywords": ["xyz", "masno", "eluwina"],
     "days": 14,
     "path": "work/",
-    "timestampFormat": "%a %d %b %Y",
+    "timestampFormat": "ddd dd MMM yyyy",
     "issueColumn": "Issue key",
     "attColumn": "Attachment",
     "inputCellDelimiter": ";"

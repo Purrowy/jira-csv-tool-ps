@@ -1,4 +1,3 @@
-Write-Host "Essa"
 $source_csv = "$PSScriptRoot\import.csv"
 $fixed_source_csv = "$PSScriptRoot\fixed.csv"
 
@@ -11,10 +10,7 @@ $imported_content = Get-Content $source_csv
 $fixed_content = $imported_content -replace ';', ','
 Set-Content -Path $fixed_source_csv -Value $fixed_content
 
-# Issue here: csv exported from jira contain columns with duplicate names
-# Trying to import just one column thru pipeline doesn't work cause import-csv needs to run first anyway
-# Import-Csv $csvFile | select asdasd
-# This works, but number of columns has to be hardcoded. Might be easier to select them later, if they are being indexed by number
+# Issue: csv exported from jira contain columns with duplicate names. This replaces column names with numbers
 $imported_csv = Import-Csv $fixed_source_csv -Header (1..36) | Select-Object -Skip 1
 
 # Prepares a list of attachments to download. Column names are hardcoded
@@ -27,49 +23,40 @@ foreach($row in $target_columns) {
 
 # Write-Host $target_list
 
-# Download listed attachments and save them under ticket's number
-<# $download_path = "$PSScriptRoot\work\"
+# Downloads listed attachments and changes filename to ticket number
+$errors = @()
+$error_check = $false
+$download_path = "$PSScriptRoot\work\"
+
 foreach ($ticket in $target_list) {
     $link = $ticket."36"
     $filename = $ticket."2"
-    $token = "xyz"
+    $token = $json.token
     $output = "$download_path$filename"
-    # $curlCommand = "curl -H `"Authorization: Bearer $token`" -o $download_path$filename $link"
+
     $headers = @{
         Authorization = "Bearer $token"
     }
 
-     try {
-        # Write-Host $curlCommand
+     try {        
         Invoke-WebRequest -Uri $link -Headers $headers -Outfile $download_path$filename
-        Write-Host "done"
+        Write-Host "Downloaded $filename"
     } catch {
-        Write-Host "failed"
-    }
-} #>
-
-# CSV analysis
-# List downloaded files
-$files = Get-ChildItem -Path .\work | Select-Object -ExpandProperty Name
-$files
-
-<# # Join data from all csv together and assign filename to each row
-$full_data = @()
-foreach ($file in $files) {
-    $csv = Import-Csv -Path .\work\$file -Header (1)
-    foreach ($row in $csv) {
-        $full_data += [PSCustomObject]@{ Filename = $file; Path = $row."1" }
+        Write-Host "Could not download $filename"
+        $errors += $filename
+        $error_check = $true
     }
 }
 
-# $full_data
+# List downloaded files
+$files = Get-ChildItem -Path .\work | Select-Object -ExpandProperty Name
 
-# $keywords = $json.keywords
-# $keywords #>
-
-<# $files_with_keywords = @()
+# Keyword validation
+Write-host "Keyword validation"
+$files_with_keywords = @()
 
 foreach ($file in $files) {
+    Write-Host -NoNewline "."
     $csv = Import-Csv -Path .\work\$file -Header (1)
     $found = $false
     foreach ($row in $csv) {
@@ -77,8 +64,8 @@ foreach ($file in $files) {
 
         foreach ($keyword in $json.keywords) {
             if ($found) {break}
-            if ($row -like "*$keyword*") {                
-                write-host "$keyword found in $file"
+
+            if ($row -like "*$keyword*") {             
                 $files_with_keywords += $file
                 $found = $true
                 break
@@ -87,14 +74,17 @@ foreach ($file in $files) {
     }
 }
 
-$files_with_keywords #>
+Write-Host ""
+Write-Host ("Tickets with exception keywords: " + $files_with_keywords)
 
 # Timestamp validation
+Write-Host "Timestamp validation"
 $minimum_date = (Get-Date).AddDays(-$json.days)
 Write-host ("Minimum date set to: " + $minimum_date.ToString($json.timestampFormat))
 $files_old = @()
 
 foreach ($file in $files) {
+    Write-Host -NoNewline "."
     $csv = Import-Csv -Path .\work\$file -Header (1)
     $found = $false
     foreach ($row in $csv) {
@@ -112,6 +102,16 @@ foreach ($file in $files) {
     }
 }
 
-$files_old
+Write-Host ""
+Write-Host ("Tickets with old files: " + $files_old)
 
+# Prints list of files that were not downloaded, if any
+if ($error_check) {
+    Write-Host ("Could not download and validate the following files: " + $errors -join '", "')
+}
 
+# Prints list of remaining files
+$remaining_files = $files | Where-Object { $files_old -notcontains $_ -and $files_with_keywords -notcontains $_ }
+$jql = 'Key in ("' + ($remaining_files -join '", "') + '")'
+Write-Host "Remaining files:"
+$jql

@@ -23,7 +23,7 @@ foreach($row in $target_columns) {
 
 # Write-Host $target_list
 
-# Downloads listed attachments and changes filename to ticket number
+<# Downloads listed attachments and changes filename to ticket number
 $errors = @()
 $error_check = $false
 $download_path = "$PSScriptRoot\work\"
@@ -46,7 +46,7 @@ foreach ($ticket in $target_list) {
         $errors += $filename
         $error_check = $true
     }
-}
+} #>
 
 # List downloaded files
 $files = Get-ChildItem -Path .\work | Select-Object -ExpandProperty Name

@@ -1,10 +1,7 @@
-$source_csv = "$PSScriptRoot\import.csv"
-$json = Get-Content .\settings.json | ConvertFrom-Json
-
-if ($json.scriptSettings.testPrint) {Write-Host "essa"}
+$json = Get-Content $PSScriptRoot\settings.json | ConvertFrom-Json
 
 # Issue: csv exported from jira contains columns with duplicate names. This replaces column names with numbers
-$imported_csv = Import-Csv $source_csv -Header (1..33) | Select-Object -Skip 1
+$imported_csv = Import-Csv "$PSScriptRoot\import.csv" -Header (1..33) | Select-Object -Skip 1
 
 # Issue: csv exported from jira has three values inside one data cell under target column, and jira ignores chosen delimiter option during export. 
 # This removes the unnecessary parts and overwrites the cell with target link only
@@ -22,29 +19,34 @@ foreach($row in $target_columns) {
 }
 
 # $target_list
-<# 
+ 
 # Downloads listed attachments and changes filename to ticket number
-$errors = @()
-$error_check = $false
-$download_path = "$PSScriptRoot\work\"
+# Change settings.json -> downloadFiles to false, if you wish to skip this step
+if ($json.scriptSettings.downloadFiles) {
 
-foreach ($ticket in $target_list) {
-    $link = $ticket."33"
-    $filename = $ticket."2"
-    $token = $json.token
-    
-    $headers = @{
-        Authorization = "Bearer $token"
+    $errors = @()
+    $error_check = $false
+    $download_path = "$PSScriptRoot\work\"
+
+    foreach ($ticket in $target_list) {
+        $link = $ticket."33"
+        $filename = $ticket."2"
+        $token = $json.token
+        
+        $headers = @{
+            Authorization = "Bearer $token"
+        }
+
+        try {        
+            Invoke-WebRequest -Uri $link -Headers $headers -Outfile $download_path$filename
+            Write-Host "Downloaded $filename"
+        } catch {
+            Write-Host "Could not download $filename"
+            $errors += $filename
+            $error_check = $true
+        }
     }
 
-     try {        
-        Invoke-WebRequest -Uri $link -Headers $headers -Outfile $download_path$filename
-        Write-Host "Downloaded $filename"
-    } catch {
-        Write-Host "Could not download $filename"
-        $errors += $filename
-        $error_check = $true
-    }
 }
 
 # List downloaded files
@@ -56,7 +58,7 @@ $files_with_keywords = @()
 
 foreach ($file in $files) {
     Write-Host -NoNewline "."
-    $csv = Import-Csv -Path .\work\$file -Header (1)
+    $csv = Import-Csv -Path $PSScriptRoot\work\$file -Header (1)
     $found = $false
     foreach ($row in $csv) {
         if ($found) {break}
@@ -84,7 +86,7 @@ $files_old = @()
 
 foreach ($file in $files) {
     Write-Host -NoNewline "."
-    $csv = Import-Csv -Path .\work\$file -Header (1)
+    $csv = Import-Csv -Path $PSScriptRoot\work\$file -Header (1)
     $found = $false
     foreach ($row in $csv) {
         if ($found) {break}
@@ -113,4 +115,9 @@ if ($error_check) {
 $remaining_files = $files | Where-Object { $files_old -notcontains $_ -and $files_with_keywords -notcontains $_ }
 $jql = 'Key in ("' + ($remaining_files -join '", "') + '")'
 Write-Host "Remaining files:"
-$jql #>
+$jql
+
+# Option to remove files from work folder upon completion. Can be enabled by setting true in settings.json -> removeFiles
+if ($json.scriptSettings.removeFiles) {
+    Get-ChildItem -Path $PSScriptRoot\work | Remove-Item -Force
+}

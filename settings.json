@@ -3,8 +3,9 @@
     "keywords": ["test", "masno", "eluwina"],
     "days": 14,
     "timestampFormat": "ddd dd MMM yyyy",
-    
-    "scriptSettings" : {
-        "testPrint": true
+
+    "scriptSettings" : {        
+        "downloadFiles": true,
+        "removeFiles": false
     }
 }

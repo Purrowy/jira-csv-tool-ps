@@ -1,11 +1,16 @@
 Usage:
 1. Paste and save your PAT in json.token
-2. Export CSV from Jira using "All fields" option, set the delimiter to comma ,
+2. Export CSV from Jira using "All fields" option, set the delimiter to comma , (this should be the default setting anyway)
 3. Rename it to "import.csv" and put it in root folder of the script
-4. Open import.csv in Excel and ctrl+s it (temporary workaround)
-5. Make sure you have "work" folder created within the root folder
-6. Run .\jct.ps1
-7. Make sure to delete files from /work/ if they are no longer needed
+4. Make sure you have "work" folder created within the root folder
+5. Run the script
+6. Make sure to delete files from /work/ if they are no longer needed
+
+Notes:
+- if running through powershell: use `.\jct.ps1`
+- if running through command prompt (cmd.exe), use `powershell.exe -File jct.ps1`
+  	- in case of errors related to script policies, use `powershell.exe -ExecutionPolicy Bypass -File jct.ps1`
+- treat PAT like your own password, don't share it with anyone. You can always revoke it through Jira's profile page, if needed
 
 How it works:
 1. Scripts imports the attachments links from provided csv
@@ -16,6 +21,4 @@ How it works:
 4. Three lists are created and printed: files containing keywords, files with old dates, and remaining files
 
 Todo:
-- fix the import.csv issue. Probably related to unix vs windows lines format?
-- remove listing of each file after validations
 - might add an option to automatically remove files from work upon completion

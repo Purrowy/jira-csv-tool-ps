@@ -1,6 +1,8 @@
 $source_csv = "$PSScriptRoot\import.csv"
 $json = Get-Content .\settings.json | ConvertFrom-Json
 
+if ($json.scriptSettings.testPrint) {Write-Host "essa"}
+
 # Issue: csv exported from jira contains columns with duplicate names. This replaces column names with numbers
 $imported_csv = Import-Csv $source_csv -Header (1..33) | Select-Object -Skip 1
 
@@ -20,7 +22,7 @@ foreach($row in $target_columns) {
 }
 
 # $target_list
-
+<# 
 # Downloads listed attachments and changes filename to ticket number
 $errors = @()
 $error_check = $false
@@ -111,4 +113,4 @@ if ($error_check) {
 $remaining_files = $files | Where-Object { $files_old -notcontains $_ -and $files_with_keywords -notcontains $_ }
 $jql = 'Key in ("' + ($remaining_files -join '", "') + '")'
 Write-Host "Remaining files:"
-$jql
+$jql #>

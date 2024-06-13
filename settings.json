@@ -2,5 +2,9 @@
     "token": "xxx",
     "keywords": ["test", "masno", "eluwina"],
     "days": 14,
-    "timestampFormat": "ddd dd MMM yyyy"
+    "timestampFormat": "ddd dd MMM yyyy",
+    
+    "scriptSettings" : {
+        "testPrint": true
+    }
 }

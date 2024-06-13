@@ -1,27 +1,34 @@
 $source_csv = "$PSScriptRoot\import.csv"
-$fixed_source_csv = "$PSScriptRoot\fixed.csv"
+# $fixed_source_csv = "$PSScriptRoot\fixed.csv"
 
 # Import values from provided json file
-$json = Get-Content .\settings.json | ConvertFrom-Json
+# $json = Get-Content .\settings.json | ConvertFrom-Json
 
 # Issue: imported csv from Jira ignores chosen delimiter option and forces its default ; inside data rows
 # Solution: replace each forced delimiter with correct one before doing anything else with the file
-$imported_content = Get-Content $source_csv
+<# $imported_content = Get-Content $source_csv
 $fixed_content = $imported_content -replace ';', ','
-Set-Content -Path $fixed_source_csv -Value $fixed_content
+Set-Content -Path $source_csv -Value $fixed_content #>
 
 # Issue: csv exported from jira contain columns with duplicate names. This replaces column names with numbers
-$imported_csv = Import-Csv $fixed_source_csv -Header (1..36) | Select-Object -Skip 1
+$imported_csv = Import-Csv $source_csv -Header (1..36) | Select-Object -Skip 1
+# $imported_csv
+foreach ($row in $imported_csv) {
+    $temp = $row."33" -split ";"
+    $temp[3]
+}
+
+# Issue: ; is used inside columns
 
 # Prepares a list of attachments to download. Column names are hardcoded
-$target_list = @()
-$target_columns = $imported_csv | Select-Object -Property "2", "36"
+<# $target_list = @()
+$target_columns = $imported_csv | Select-Object -Property "2", "33"
 
 foreach($row in $target_columns) {
     $target_list += $row
-}
+} #>
 
-# Write-Host $target_list
+# $target_list
 
 <# Downloads listed attachments and changes filename to ticket number
 $errors = @()
@@ -47,7 +54,7 @@ foreach ($ticket in $target_list) {
         $error_check = $true
     }
 } #>
-
+<#
 # List downloaded files
 $files = Get-ChildItem -Path .\work | Select-Object -ExpandProperty Name
 
@@ -114,4 +121,4 @@ if ($error_check) {
 $remaining_files = $files | Where-Object { $files_old -notcontains $_ -and $files_with_keywords -notcontains $_ }
 $jql = 'Key in ("' + ($remaining_files -join '", "') + '")'
 Write-Host "Remaining files:"
-$jql
+$jql #>
